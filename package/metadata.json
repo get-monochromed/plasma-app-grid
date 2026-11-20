@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "io.github.get_monochromed.plasma_app_grid",
+        "Name": "Plasma App Grid",
+        "Description": "A centered application launcher with a scrollable grid",
+        "Category": "Application Launchers",
+        "Icon": "view-grid",
+        "License": "GPL-2.0-or-later",
+        "Version": "0.1.0",
+        "Website": "https://github.com/get-monochromed/plasma-app-grid"
+    },
+    "X-Plasma-API-Minimum-Version": "6.8",
+    "X-Plasma-Provides": ["org.kde.plasma.launchermenu"]
+}
