@@ -18,15 +18,7 @@ To update, use `--upgrade` in place of `--install`, then restart Plasma Shell to
 systemctl --user restart plasma-plasmashell.service
 ```
 
-If you already use **Plasma App Grid (6 Columns)**, you can keep its plugin ID and update that panel widget in place:
-
-```sh
-build_dir="$(mktemp -d)"
-python3 scripts/build-six-columns.py "$build_dir/package"
-kpackagetool6 --type Plasma/Applet --upgrade "$build_dir/package"
-```
-
-To remove a package, pass its plugin ID to `kpackagetool6 --type Plasma/Applet --remove`. The standard ID is `io.github.get_monochromed.plasma_app_grid`. The comparison build uses `io.github.get_monochromed.plasma_app_grid.six_columns`.
+To remove the widget, run `kpackagetool6 --type Plasma/Applet --remove io.github.get_monochromed.plasma_app_grid`.
 
 ## Use
 
