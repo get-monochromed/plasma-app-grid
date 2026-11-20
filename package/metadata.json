@@ -7,7 +7,7 @@
         "Category": "Application Launchers",
         "Icon": "view-grid",
         "License": "GPL-2.0-or-later",
-        "Version": "0.1.0",
+        "Version": "0.1.1",
         "Website": "https://github.com/get-monochromed/plasma-app-grid"
     },
     "X-Plasma-API-Minimum-Version": "6.8",

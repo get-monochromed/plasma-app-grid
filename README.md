@@ -1,6 +1,6 @@
 # Plasma App Grid
 
-A centered KDE Plasma application launcher with the active Plasma theme’s dialog frame, blur, and shadow. It shows **Favourites**, **All Apps**, and **System**. At its standard size the app grid shows seven columns and four rows, with more rows available by scrolling.
+A centered KDE Plasma application launcher with the active Plasma theme’s dialog frame, blur, and shadow. It shows **Favourites**, **All Apps**, and **System**. At its standard size the app grid shows five columns and four rows, with more rows available by scrolling.
 
 ## Install
 

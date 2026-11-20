@@ -27,9 +27,9 @@ PlasmaCore.Window {
     readonly property bool showSystem: tabs.currentIndex === 2 && !searching
     readonly property bool showFavorites: tabs.currentIndex === 0 && !searching
     readonly property int padding: Kirigami.Units.largeSpacing
-    readonly property int preferredCellWidth: Math.round(Kirigami.Units.gridUnit * 6.5)
-    readonly property int preferredCellHeight: Kirigami.Units.gridUnit * 6
-    readonly property int columns: Math.max(1, Math.min(showSystem ? 6 : 7,
+    readonly property int preferredGridWidth: Math.round(Kirigami.Units.gridUnit * 45.5)
+    readonly property int preferredCellHeight: Math.round(Kirigami.Units.gridUnit * 7.5)
+    readonly property int columns: Math.max(1, Math.min(showSystem ? 6 : 5,
         Math.floor(grid.width / (Kirigami.Units.gridUnit * 4))))
     readonly property Kicker.KAStatsFavoritesModel favorites: rootModel.favoritesModel as Kicker.KAStatsFavoritesModel
     readonly property var sessionActions: ["lock-screen", "logout", "switch-user", "suspend", "reboot", "shutdown"]
@@ -37,7 +37,7 @@ PlasmaCore.Window {
 
     title: qsTr("Plasma App Grid")
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    width: Math.min(7 * preferredCellWidth + 2 * padding + leftPadding + rightPadding,
+    width: Math.min(preferredGridWidth + 2 * padding + leftPadding + rightPadding,
         Math.max(1, (appletInterface.Screen.desktopAvailableWidth || 1024) - 2 * padding))
     height: Math.min(4 * preferredCellHeight + searchField.implicitHeight + tabs.implicitHeight
         + 5 * padding + topPadding + bottomPadding,
@@ -244,8 +244,9 @@ PlasmaCore.Window {
                     activeFocusOnTab: count > 0
                     boundsBehavior: Flickable.StopAtBounds
                     cellWidth: Math.floor(width / launcher.columns)
-                    cellHeight: Math.floor(height / Math.max(1, Math.min(4,
-                        Math.floor(height / (Kirigami.Units.gridUnit * 4)))))
+                    cellHeight: launcher.showSystem ? Math.min(height, Kirigami.Units.gridUnit * 6)
+                        : Math.floor(height / Math.max(1, Math.min(4,
+                            Math.floor(height / (Kirigami.Units.gridUnit * 4)))))
                     model: launcher.showSystem ? systemActions : (launcher.showFavorites ? launcher.favorites : apps)
                     keyNavigationEnabled: true
 
@@ -277,6 +278,8 @@ PlasmaCore.Window {
                         height: grid.cellHeight
                         text: model.display
                         iconSource: model.decoration
+                        preferredIconSize: launcher.showSystem ? Kirigami.Units.iconSizes.huge
+                            : Math.round(Kirigami.Units.iconSizes.huge * 1.4)
                         selected: GridView.isCurrentItem && grid.activeFocus
                         pinnable: !launcher.showSystem && !!model.favoriteId
                         onClicked: launcher.activateTile(index)

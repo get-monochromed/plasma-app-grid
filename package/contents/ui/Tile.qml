@@ -12,6 +12,7 @@ PlasmaComponents.ItemDelegate {
     id: tile
 
     required property var iconSource
+    required property int preferredIconSize
     required property bool selected
     required property bool pinnable
     signal menuRequested()
@@ -22,7 +23,7 @@ PlasmaComponents.ItemDelegate {
         }
     }
 
-    readonly property int iconSize: Math.max(1, Math.min(Kirigami.Units.iconSizes.huge,
+    readonly property int iconSize: Math.max(1, Math.min(preferredIconSize,
         width - 2 * padding, height - 2 * padding - labelHeight - Kirigami.Units.smallSpacing))
 
     readonly property int labelHeight: Math.ceil(2 * labelMetrics.lineSpacing)
@@ -46,6 +47,7 @@ PlasmaComponents.ItemDelegate {
             Layout.preferredWidth: tile.iconSize
             Layout.preferredHeight: tile.iconSize
             source: tile.iconSource
+            roundToIconSize: false
             fallback: "application-x-executable"
         }
 
