@@ -35,6 +35,7 @@ PlasmoidItem {
         active: false
         sourceComponent: Launcher {
             appletInterface: applet
+            sixColumns: Plasmoid.pluginName.endsWith(".six_columns")
             favoritesClient: Plasmoid.pluginName + ".favorites.instance-" + Plasmoid.id
             visible: applet.launcherOpen
             onCloseRequested: applet.launcherOpen = false

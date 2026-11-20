@@ -20,6 +20,7 @@ PlasmaCore.Window {
 
     required property PlasmoidItem appletInterface
     required property string favoritesClient
+    required property bool sixColumns
     signal closeRequested()
 
     readonly property bool onWayland: KWindowSystem.KWindowSystem.isPlatformWayland
@@ -28,8 +29,9 @@ PlasmaCore.Window {
     readonly property bool showFavorites: tabs.currentIndex === 0 && !searching
     readonly property int padding: Kirigami.Units.largeSpacing
     readonly property int preferredGridWidth: Math.round(Kirigami.Units.gridUnit * 45.5)
-    readonly property int preferredCellHeight: Math.round(Kirigami.Units.gridUnit * 7.5)
-    readonly property int columns: Math.max(1, Math.min(showSystem ? 6 : 5,
+    readonly property int preferredCellHeight: Math.round(Kirigami.Units.gridUnit * (sixColumns ? 6.75 : 7.5))
+    readonly property int appIconSize: Math.round(Kirigami.Units.iconSizes.huge * (sixColumns ? 1.2 : 1.4))
+    readonly property int columns: Math.max(1, Math.min(showSystem || sixColumns ? 6 : 5,
         Math.floor(grid.width / (Kirigami.Units.gridUnit * 4))))
     readonly property Kicker.KAStatsFavoritesModel favorites: rootModel.favoritesModel as Kicker.KAStatsFavoritesModel
     readonly property var sessionActions: ["lock-screen", "logout", "switch-user", "suspend", "reboot", "shutdown"]
@@ -279,7 +281,7 @@ PlasmaCore.Window {
                         text: model.display
                         iconSource: model.decoration
                         preferredIconSize: launcher.showSystem ? Kirigami.Units.iconSizes.huge
-                            : Math.round(Kirigami.Units.iconSizes.huge * 1.4)
+                            : launcher.appIconSize
                         selected: GridView.isCurrentItem && grid.activeFocus
                         pinnable: !launcher.showSystem && !!model.favoriteId
                         onClicked: launcher.activateTile(index)

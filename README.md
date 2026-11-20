@@ -1,6 +1,6 @@
 # Plasma App Grid
 
-A centered KDE Plasma application launcher with the active Plasma theme’s dialog frame, blur, and shadow. It shows **Favourites**, **All Apps**, and **System**. At its standard size the app grid shows five columns and four rows, with more rows available by scrolling.
+A centered KDE Plasma application launcher with the active Plasma theme’s dialog frame, blur, and shadow. It shows **Favourites**, **All Apps**, and **System**. The app grid shows four visible rows, with more rows available by scrolling. Two installable variants offer five columns with larger icons or six columns with smaller icons.
 
 ## Install
 
@@ -12,13 +12,23 @@ kpackagetool6 --type Plasma/Applet --install package
 
 In Plasma, open **Add Widgets**, find **Plasma App Grid**, and drag it onto your panel. To use it in your current launcher’s slot, right-click that launcher, open **Show Alternatives**, and select **Plasma App Grid**. You can assign a shortcut through the widget’s keyboard shortcut settings.
 
-To update, use `--upgrade` in place of `--install`, then restart Plasma Shell to load the updated widget. On a systemd-based Plasma session, run:
+To install **Plasma App Grid (6 Columns)** alongside the five-column launcher, build its package with Python 3:
+
+```sh
+build_dir="$(mktemp -d)"
+python3 scripts/build-six-columns.py "$build_dir/package"
+kpackagetool6 --type Plasma/Applet --install "$build_dir/package"
+```
+
+Both names appear under **Show Alternatives** and **Add Widgets**. Both use the same Plasma favourites.
+
+To update either variant, build its package if needed and use `--upgrade` in place of `--install`, then restart Plasma Shell to load the updated widget. On a systemd-based Plasma session, run:
 
 ```sh
 systemctl --user restart plasma-plasmashell.service
 ```
 
-To remove the widget, use `kpackagetool6 --type Plasma/Applet --remove io.github.get_monochromed.plasma_app_grid`.
+To remove a variant, pass its plugin ID to `kpackagetool6 --type Plasma/Applet --remove`. Use `io.github.get_monochromed.plasma_app_grid` for five columns or `io.github.get_monochromed.plasma_app_grid.six_columns` for six.
 
 ## Use
 
