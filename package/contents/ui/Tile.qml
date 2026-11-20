@@ -11,15 +11,16 @@ import org.kde.plasma.extras as PlasmaExtras
 PlasmaComponents.ItemDelegate {
     id: tile
 
+    required property int index
     required property var iconSource
     required property int preferredIconSize
     required property bool selected
-    required property bool pinnable
-    signal menuRequested()
+    required property bool menuEnabled
+    signal menuRequested(point position)
 
-    function requestMenu(): void {
-        if (pinnable) {
-            menuRequested();
+    function requestMenu(position = Qt.point(width / 2, height / 2)): void {
+        if (menuEnabled) {
+            menuRequested(position);
         }
     }
 
@@ -70,13 +71,13 @@ PlasmaComponents.ItemDelegate {
         anchors.fill: parent
         active: tile.selected
         hovered: tile.hovered
-        pressed: tile.down
+        pressed: tile.selected || tile.down
     }
 
     TapHandler {
         acceptedButtons: Qt.RightButton
-        enabled: tile.pinnable
-        onTapped: tile.requestMenu()
+        enabled: tile.menuEnabled
+        onTapped: eventPoint => tile.requestMenu(eventPoint.position)
     }
 
     PlasmaComponents.ToolTip.visible: tile.hovered && caption.truncated

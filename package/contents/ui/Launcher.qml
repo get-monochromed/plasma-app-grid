@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Controls as QQC
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kirigami.platform as KirigamiPlatform
 import org.kde.kitemmodels as KItemModels
 import org.kde.kwindowsystem as KWindowSystem
 import org.kde.layershell as LayerShell
@@ -15,12 +16,13 @@ import org.kde.plasma.extras as PlasmaExtras
 import org.kde.plasma.plasmoid
 import org.kde.plasma.private.kicker as Kicker
 
+import "AppActions.js" as AppActions
+
 PlasmaCore.Window {
     id: launcher
 
     required property PlasmoidItem appletInterface
     required property string favoritesClient
-    required property bool sixColumns
     signal closeRequested()
 
     readonly property bool onWayland: KWindowSystem.KWindowSystem.isPlatformWayland
@@ -29,9 +31,9 @@ PlasmaCore.Window {
     readonly property bool showFavorites: tabs.currentIndex === 0 && !searching
     readonly property int padding: Kirigami.Units.largeSpacing
     readonly property int preferredGridWidth: Math.round(Kirigami.Units.gridUnit * 45.5)
-    readonly property int preferredCellHeight: Math.round(Kirigami.Units.gridUnit * (sixColumns ? 6.75 : 7.5))
-    readonly property int appIconSize: Math.round(Kirigami.Units.iconSizes.huge * (sixColumns ? 1.2 : 1.4))
-    readonly property int columns: Math.max(1, Math.min(showSystem || sixColumns ? 6 : 5,
+    readonly property int preferredCellHeight: Math.round(Kirigami.Units.gridUnit * 6.75)
+    readonly property int appIconSize: Math.round(Kirigami.Units.iconSizes.huge * 1.2)
+    readonly property int columns: Math.max(1, Math.min(6,
         Math.floor(grid.width / (Kirigami.Units.gridUnit * 4))))
     readonly property Kicker.KAStatsFavoritesModel favorites: rootModel.favoritesModel as Kicker.KAStatsFavoritesModel
     readonly property var sessionActions: ["lock-screen", "logout", "switch-user", "suspend", "reboot", "shutdown"]
@@ -39,7 +41,7 @@ PlasmaCore.Window {
 
     title: qsTr("Plasma App Grid")
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    width: Math.min(preferredGridWidth + 2 * padding + leftPadding + rightPadding,
+    width: Math.min(preferredGridWidth + 2 * padding + leftPadding + rightPadding + scrollbar.implicitWidth,
         Math.max(1, (appletInterface.Screen.desktopAvailableWidth || 1024) - 2 * padding))
     height: Math.min(4 * preferredCellHeight + searchField.implicitHeight + tabs.implicitHeight
         + 5 * padding + topPadding + bottomPadding,
@@ -63,14 +65,14 @@ PlasmaCore.Window {
             }
             searchField.forceActiveFocus(Qt.PopupFocusReason);
         } else {
-            favoritesMenu.close();
+            contextMenu.close();
             searchField.clear();
             grid.positionViewAtBeginning();
         }
     }
 
     onActiveChanged: {
-        if (!active && visible) {
+        if (!active && visible && !contextMenu.opened) {
             closeRequested();
         }
     }
@@ -88,19 +90,19 @@ PlasmaCore.Window {
         allAppsModel = null;
     }
 
-    function activateTile(row: int): void {
+    function activateTile(row: int, actionId: string, argument: var): void {
         if (row < 0 || row >= grid.count) {
             return;
         }
 
         let launched = false;
         if (showSystem) {
-            launched = systemModel.trigger(systemActions.mapToSource(systemActions.index(row, 0)).row, "", null);
+            launched = systemModel.trigger(systemActions.mapToSource(systemActions.index(row, 0)).row, actionId, argument);
         } else if (showFavorites) {
-            launched = favorites.trigger(row, "", null);
+            launched = favorites.trigger(row, actionId, argument);
         } else {
             const sourceRow = apps.mapToSource(apps.index(row, 0)).row;
-            launched = allAppsModel !== null && allAppsModel.trigger(sourceRow, "", null);
+            launched = allAppsModel !== null && allAppsModel.trigger(sourceRow, actionId, argument);
         }
 
         if (launched) {
@@ -196,7 +198,7 @@ PlasmaCore.Window {
                 Accessible.name: placeholderText
                 onAccepted: {
                     if (launcher.searching) {
-                        launcher.activateTile(0);
+                        launcher.activateTile(0, "", null);
                     }
                 }
                 onTextChanged: {
@@ -240,7 +242,7 @@ PlasmaCore.Window {
                     id: grid
 
                     anchors.fill: parent
-                    anchors.rightMargin: Kirigami.Units.smallSpacing
+                    anchors.rightMargin: scrollbar.implicitWidth + Kirigami.Units.smallSpacing
                     clip: true
                     focus: false
                     activeFocusOnTab: count > 0
@@ -250,22 +252,31 @@ PlasmaCore.Window {
                         : Math.floor(height / Math.max(1, Math.min(4,
                             Math.floor(height / (Kirigami.Units.gridUnit * 4)))))
                     model: launcher.showSystem ? systemActions : (launcher.showFavorites ? launcher.favorites : apps)
-                    keyNavigationEnabled: true
+                    keyNavigationEnabled: false
+                    keyNavigationWraps: false
+                    onModelChanged: contextMenu.close()
+                    onCountChanged: contextMenu.close()
 
                     Accessible.name: launcher.searching ? qsTr("Search results") : (tabs.currentItem as PlasmaComponents.TabButton)?.text ?? ""
 
                     PlasmaComponents.ScrollBar.vertical: PlasmaComponents.ScrollBar {
                         id: scrollbar
                         parent: grid.parent
-                        anchors.top: grid.top
-                        anchors.bottom: grid.bottom
+                        width: implicitWidth
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
                         anchors.right: parent.right
+                        anchors.rightMargin: Kirigami.Units.smallSpacing - launcher.padding
                         policy: QQC.ScrollBar.AsNeeded
                     }
 
-                    Keys.onReturnPressed: launcher.activateTile(currentIndex)
-                    Keys.onEnterPressed: launcher.activateTile(currentIndex)
-                    Keys.onSpacePressed: launcher.activateTile(currentIndex)
+                    Keys.onLeftPressed: grid.moveCurrentIndexLeft()
+                    Keys.onRightPressed: grid.moveCurrentIndexRight()
+                    Keys.onUpPressed: grid.moveCurrentIndexUp()
+                    Keys.onDownPressed: grid.moveCurrentIndexDown()
+                    Keys.onReturnPressed: launcher.activateTile(currentIndex, "", null)
+                    Keys.onEnterPressed: launcher.activateTile(currentIndex, "", null)
+                    Keys.onSpacePressed: launcher.activateTile(currentIndex, "", null)
                     Keys.onMenuPressed: {
                         (currentItem as Tile)?.requestMenu();
                     }
@@ -273,7 +284,6 @@ PlasmaCore.Window {
                     delegate: Tile {
                         id: tile
 
-                        required property int index
                         required property var model
 
                         width: grid.cellWidth
@@ -283,12 +293,36 @@ PlasmaCore.Window {
                         preferredIconSize: launcher.showSystem ? Kirigami.Units.iconSizes.huge
                             : launcher.appIconSize
                         selected: GridView.isCurrentItem && grid.activeFocus
-                        pinnable: !launcher.showSystem && !!model.favoriteId
-                        onClicked: launcher.activateTile(index)
-                        onMenuRequested: {
+                        menuEnabled: !launcher.showSystem && (!!model.favoriteId || model.hasActionList === true)
+                        onClicked: launcher.activateTile(index, "", null)
+                        onMenuRequested: position => {
                             grid.currentIndex = index;
-                            favoritesMenu.favoriteId = model.favoriteId;
-                            favoritesMenu.popup(tile, 0, tile.height);
+                            grid.forceActiveFocus(Qt.PopupFocusReason);
+                            contextMenu.open(tile, position, AppActions.actionsFor(
+                                qsTr, model.actionList, launcher.favorites, model.favoriteId));
+                        }
+                    }
+                }
+
+                Kirigami.WheelHandler {
+                    id: wheelHandler
+
+                    target: grid
+                    filterMouseEvents: true
+                    verticalStepSize: Math.max(25 * KirigamiPlatform.Settings.mouseWheelScrollLines, Math.round(grid.cellHeight * 0.8))
+
+                    onWheel: wheel => {
+                        // Kirigami uses step size when angle deltas are available. Boost
+                        // pixel-only trackpad gestures as well.
+                        if (wheel.angleDelta.y === 0 && wheel.pixelDelta.y !== 0
+                            && !(wheel.modifiers & wheelHandler.pageScrollModifiers)) {
+                            wheel.accepted = true;
+                            const distance = Math.abs(wheel.pixelDelta.y) * 1.6;
+                            if (wheel.pixelDelta.y < 0) {
+                                wheelHandler.scrollDown(distance);
+                            } else {
+                                wheelHandler.scrollUp(distance);
+                            }
                         }
                     }
                 }
@@ -311,22 +345,14 @@ PlasmaCore.Window {
             }
         }
 
-        PlasmaComponents.Menu {
-            id: favoritesMenu
-            property string favoriteId: ""
-            popupType: QQC.Popup.Item
+        AppContextMenu {
+            id: contextMenu
 
-            PlasmaComponents.MenuItem {
-                readonly property bool pinned: favoritesMenu.visible && launcher.favorites.isFavorite(favoritesMenu.favoriteId)
-                text: pinned ? qsTr("Remove from Favourites") : qsTr("Add to Favourites")
-                icon.name: pinned ? "bookmark-remove" : "bookmark-new"
-
-                onTriggered: {
-                    if (launcher.favorites.isFavorite(favoritesMenu.favoriteId)) {
-                        launcher.favorites.removeFavorite(favoritesMenu.favoriteId);
-                    } else {
-                        launcher.favorites.addFavorite(favoritesMenu.favoriteId);
-                    }
+            onActionTriggered: (actionId, argument) => {
+                if (actionId.startsWith("_kicker_favorite_")) {
+                    AppActions.handleFavoriteAction(actionId, argument);
+                } else if (tile && grid.itemAtIndex(tile.index) === tile) {
+                    launcher.activateTile(tile.index, actionId, argument);
                 }
             }
         }
