@@ -12,7 +12,13 @@ kpackagetool6 --type Plasma/Applet --install package
 
 In Plasma, open **Add Widgets**, find **Plasma App Grid**, and drag it onto your panel. To use it in your current launcher’s slot, right-click that launcher, open **Show Alternatives**, and select **Plasma App Grid**. You can assign a shortcut through the widget’s keyboard shortcut settings.
 
-For an update use `--upgrade` in place of `--install`. To remove it, use `kpackagetool6 --type Plasma/Applet --remove io.github.get_monochromed.plasma_app_grid`.
+To update, use `--upgrade` in place of `--install`, then restart Plasma Shell to load the updated widget. On a systemd-based Plasma session, run:
+
+```sh
+systemctl --user restart plasma-plasmashell.service
+```
+
+To remove the widget, use `kpackagetool6 --type Plasma/Applet --remove io.github.get_monochromed.plasma_app_grid`.
 
 ## Use
 
